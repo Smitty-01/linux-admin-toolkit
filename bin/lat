@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+set -euo pipefail
+IFS=$'\n\t'
+trap 'log ERROR "Unhandled error at line $LINENO (exit code $?)"; exit 1' ERR
+
+BASE_DIR="/usr/local/lib/lat"
+
+# Load core libraries
+source "$BASE_DIR/lib/logging.sh"
+source "$BASE_DIR/lib/validation.sh"
+source "$BASE_DIR/lib/metrics.sh"
+
+# shellcheck source=config/default.conf
+source "$BASE_DIR/config/default.conf"
+
+case "${1:-}" in
+    user|service|backup|security|audit)
+        module="$1"
+        shift
+        # shellcheck disable=SC1090
+        source "$BASE_DIR/modules/${module}.sh"
+        "${module}_command" "$@"
+        ;;
+    --version)
+        echo "Linux Admin Toolkit v1.0.0"
+        ;;
+    *)
+        echo "Usage: lat {user|service|backup|security|audit}"
+        exit 1
+        ;;
+esac
